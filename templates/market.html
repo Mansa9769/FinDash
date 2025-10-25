@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Manager - Market Insights</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+        }
+
+        header {
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .logo svg {
+            width: 24px;
+            height: 24px;
+            color: #2563eb;
+        }
+
+        nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        .nav-btn:hover {
+            color: #111827;
+        }
+
+        .nav-btn.active {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+
+        .currency-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .currency-item:not(:last-child) {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .currency-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .currency-icon.usd {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .currency-icon.eur {
+            background-color: #dcfce7;
+            color: #16a34a;
+        }
+
+        .currency-info {
+            flex: 1;
+        }
+
+        .currency-rate {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .currency-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .currency-change.positive {
+            color: #16a34a;
+        }
+
+        .currency-change.negative {
+            color: #dc2626;
+        }
+
+        .nifty-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .nifty-header svg {
+            width: 20px;
+            height: 20px;
+            color: #16a34a;
+        }
+
+        .nifty-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nifty-price {
+            font-size: 2.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .nifty-change {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #16a34a;
+            margin-bottom: 1.5rem;
+        }
+
+        .nifty-change .value {
+            font-weight: 500;
+        }
+
+        .nifty-change .percent {
+            font-size: 0.875rem;
+        }
+
+        .nifty-change .period {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 1.5rem;
+        }
+
+        .news-section {
+            margin-top: 3rem;
+        }
+
+        .news-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .news-header svg {
+            width: 28px;
+            height: 28px;
+            color: #2563eb;
+        }
+
+        .news-header h2 {
+            font-size: 1.875rem;
+            font-weight: bold;
+        }
+
+        .news-list {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .news-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .news-content {
+            flex: 1;
+        }
+
+        .news-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .news-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .news-source {
+            font-weight: 500;
+        }
+
+        .news-time::before {
+            content: "•";
+            margin-right: 0.5rem;
+        }
+
+        .news-tag {
+            padding: 0.375rem 0.75rem;
+            background-color: #f3f4f6;
+            color: #374151;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .news-item {
+                flex-direction: column;
+            }
+
+            .news-tag {
+                align-self: flex-start;
+            }
+        }
+
+        .nav{display:flex;gap:8px}
+.nav-pill{
+  display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;
+  background:#eef2ff;color:#1d4ed8;text-decoration:none;font-weight:600
+}
+.nav-pill.muted{background:#f3f4f6;color:#6b7280;cursor:default}
+.nav-pill.active{box-shadow:inset 0 0 0 2px #c7d2fe}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 28px;background:var(--card);box-shadow:var(--shadow);
+  position:sticky;top:0;z-index:20;
+}
+.brand{display:flex;gap:10px;align-items:center;font-weight:700}
+.brand-icon{font-size:20px}
+
+h1,h2,h3{margin:0 0 6px}
+/* clickable news items */
+.news-link{ color:#1e3a8a; text-decoration:none; }
+.news-link:hover{ text-decoration:underline; color:#2563eb; }
+.link-card{ display:block; color:inherit; text-decoration:none; }
+.link-card:hover{ background:#f9fafb; }
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --blue:#1e66f5;
+  --blue-ghost:#e9f0ff;
+  --green:#10b981;
+  --red:#ef4444;
+  --ring:#c7d2fe;
+  --radius:14px;
+  --shadow:0 8px 24px rgba(16,24,40,.06);
+}
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+      <span class="brand-icon"><i class="fa-solid fa-chart-simple" style="color: #3d7dae;"></i></span>
+      <span class="brand-text">Cash Manager</span>
+    </div>
+
+            <nav class="nav">
+      <a class="nav-pill" href="{{ url_for('dashboard') }}">Dashboard</a>
+       <a class="nav-pill active" href="{{ url_for('market_insights') }}">Market Insights</a>
+    </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <h1 class="page-title">Market Insights</h1>
+            <p class="page-subtitle">Stay updated with market trends and financial news</p>
+        </div>
+
+        <div class="grid">
+            <!-- INR Exchange Rates Card -->
+            <div class="card">
+                <h2 class="card-title">INR Exchange Rates</h2>
+                <div>
+                    <div class="currency-item">
+                        <div class="currency-icon usd">US</div>
+                        <div class="currency-info">
+                            <div class="currency-rate">1 USD = ₹<span id="usd-rate">--</span></div>
+                            <div class="currency-change negative">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 3L4 9h12l-6-6z" transform="rotate(180 10 9)"></path>
+                                </svg>
+                                <span>-0.15 (-0.18%)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-item">
+                        <div class="currency-icon eur">EU</div>
+                        <div class="currency-info">
+                            <div class="currency-rate">1 EUR = ₹<span id="eur-rate">--</span></div>
+                            <div class="currency-change positive">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 3L4 9h12l-6-6z"></path>
+                                </svg>
+                                <span>+0.32 (+0.35%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NIFTY 50 Card -->
+            <div class="card">
+                <div class="nifty-header">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    <h3>NIFTY 50</h3>
+                </div>
+                <div class="nifty-price" id="nifty-price">--</div>
+                <div class="nifty-change">
+                    <span class="value" id="nifty-change">--</span>
+                    <span class="percent" id="nifty-percent">--</span>
+                    <span class="period">5 days</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="niftyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Budgeting News Section -->
+        <div class="news-section">
+            <div class="news-header">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                </svg>
+                <h2>Latest Budgeting News</h2>
+            </div>
+
+            <div class="news-list" id="newsList">
+                <div class="loading">Loading news articles...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let niftyChart = null;
+
+        // Fetch currency rates from Flask API
+        async function fetchCurrencyRates() {
+            try {
+                const response = await fetch('/api/currency-rates');
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.usd) document.getElementById('usd-rate').textContent = data.usd;
+                    if (data.eur) document.getElementById('eur-rate').textContent = data.eur;
+                }
+            } catch (error) {
+                console.error('Error fetching currency rates:', error);
+                document.getElementById('usd-rate').textContent = '83.42';
+                document.getElementById('eur-rate').textContent = '91.28';
+            }
+        }
+
+        // Fetch NIFTY data from Flask API
+        async function fetchNiftyData() {
+            try {
+                const response = await fetch('/api/nifty-data');
+                const data = await response.json();
+                
+                if (data.success && data.current) {
+                    document.getElementById('nifty-price').textContent = data.current.toLocaleString();
+                    document.getElementById('nifty-change').textContent = 
+                        (data.change >= 0 ? '+' : '') + data.change.toFixed(2);
+                    document.getElementById('nifty-percent').textContent = 
+                        '(' + (data.changePercent >= 0 ? '+' : '') + data.changePercent.toFixed(2) + '%)';
+                    
+                    if (data.history && data.history.length > 0) {
+                        initChart(data.history);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching NIFTY data:', error);
+                // Use fallback data
+                document.getElementById('nifty-price').textContent = '24,587';
+                document.getElementById('nifty-change').textContent = '+407.00';
+                document.getElementById('nifty-percent').textContent = '(+1.68%)';
+                initChart([
+                    { date: 'Oct 16', value: 24180 },
+                    { date: 'Oct 17', value: 24360 },
+                    { date: 'Oct 18', value: 24220 },
+                    { date: 'Oct 19', value: 24480 },
+                    { date: 'Oct 20', value: 24587 }
+                ]);
+            }
+        }
+
+        // Initialize NIFTY 50 chart
+        function initChart(historyData) {
+            const ctx = document.getElementById('niftyChart').getContext('2d');
+            
+            if (niftyChart) {
+                niftyChart.destroy();
+            }
+
+            const labels = historyData.map(d => d.date);
+            const values = historyData.map(d => d.value);
+            
+            niftyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#10b981',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: '#9ca3af'
+                            },
+                            grid: {
+                                color: '#e5e7eb',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#9ca3af'
+                            },
+                            grid: {
+                                color: '#e5e7eb',
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch news from Flask API
+        async function fetchNews() {
+            try {
+                const response = await fetch('/api/news');
+                const data = await response.json();
+                
+                if (data.success && data.articles && data.articles.length > 0) {
+                    displayNews(data.articles);
+                } else {
+                    displayFallbackNews();
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                displayFallbackNews();
+            }
+        }
+
+        // Display fallback news
+        function displayFallbackNews() {
+            const fallbackArticles = [
+                {
+                    title: '5 Smart Ways to Cut Monthly Expenses in 2025',
+                    source: 'Financial Times',
+                    publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                    keyword: 'Personal Finance'
+                },
+                {
+                    title: 'How to Build an Emergency Fund in 6 Months',
+                    source: 'Money Magazine',
+                    publishedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+                    keyword: 'Personal Finance'
+                },
+                {
+                    title: 'Zero-Based Budgeting: A Complete Guide',
+                    source: 'Forbes',
+                    publishedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+                    keyword: 'Budgeting Tips'
+                },
+                {
+                    title: 'Top Investment Options for Conservative Savers',
+                    source: 'Bloomberg',
+                    publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                    keyword: 'Personal Finance'
+                },
+                {
+                    title: 'Debt Snowball vs Avalanche: Which is Better?',
+                    source: 'CNBC',
+                    publishedAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+                    keyword: 'Personal Finance'
+                }
+            ];
+            displayNews(fallbackArticles);
+        }
+
+        // Display news articles
+       function displayNews(articles) {
+  const newsList = document.getElementById('newsList');
+
+  const categoryMap = {
+    'Personal Finance': 'Savings',
+    'Budgeting Tips': 'Budgeting'
+  };
+  const categories = ['Savings', 'Emergency Fund', 'Budgeting', 'Investment', 'Debt Management'];
+
+  newsList.innerHTML = articles.map((article, index) => {
+    const publishedDate = new Date(article.publishedAt);
+    const now = new Date();
+    const diffMs = now - publishedDate;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const timeAgo = diffHours < 1 ? 'Just now' : (diffHours < 24 ? `${diffHours}h ago` : `${Math.floor(diffHours/24)}d ago`);
+    const category = categoryMap[article.keyword] || categories[index % categories.length];
+
+    // If URL is missing, fall back to non-clickable card using '#'
+    const href = article.url || '#';
+    const isClickable = !!article.url;
+
+    return `
+      <a href="${href}" ${isClickable ? 'target="_blank" rel="noopener noreferrer"' : ''} class="link-card">
+        <div class="news-item">
+          <div class="news-content">
+            <div class="news-title">
+              <span class="news-link">${article.title}</span>
+            </div>
+            <div class="news-meta">
+              <span class="news-source">${article.source || 'Unknown'}</span>
+              <span class="news-time">${timeAgo}</span>
+            </div>
+          </div>
+          <div class="news-tag">${category}</div>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            fetchCurrencyRates();
+            fetchNiftyData();
+            fetchNews();
+        });
+    </script>
+</body>
+</html>

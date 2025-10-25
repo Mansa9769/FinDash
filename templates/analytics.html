@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>📊 Analytics</h2>
+    <div class="chart-container">
+      <h3>Category Expenses</h3>
+      <canvas id="categoryChart"></canvas>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn">⬅ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    const labels = {{ labels | tojson }};
+    const data = {{ data | tojson }};
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Expenses by Category',
+          data: data,
+          backgroundColor: '#007bff'
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true, ticks: { callback: val => '₹' + val } } }
+      }
+    });
+  </script>
+</body>
+</html>

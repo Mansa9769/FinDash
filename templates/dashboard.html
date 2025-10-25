@@ -1,0 +1,308 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cash Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon"><i class="fa-solid fa-chart-simple" style="color: #3d7dae;"></i></span>
+      <span class="brand-text">Cash Manager</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-pill active" href="#">Dashboard</a>
+       <a class="nav-pill" href="{{ url_for('market_insights') }}">Market Insights</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <h1>Cash Management Dashboard</h1>
+      <p class="sub">Real-time overview of your financial operations</p>
+    </section>
+
+    <!-- KPI cards -->
+    <section class="kpis">
+      <div class="kpi">
+        <div class="kpi-title">Total Balance<i class="fa-solid fa-wallet" style="color: #3d7dae;"></i>
+</div>
+        <div class="kpi-value">₹{{ "{:,.0f}".format(balance_val) }}</div>
+        <div class="kpi-sub up">+12.5% vs last month</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Cash Inflow<i class="fa-solid fa-arrow-up" style="color: #43d05f;"></i></div>
+        <div class="kpi-value">₹{{ "{:,.0f}".format(inflow_val) }}</div>
+        <div class="kpi-sub up">+18.2% vs last month</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Cash Outflow<i class="fa-solid fa-arrow-down" style="color: #e13d4d;"></i>
+</div>
+        <div class="kpi-value">₹{{ "{:,.0f}".format(outflow_val) }}</div>
+        <div class="kpi-sub down">-5.4% vs last month</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-title">Net Cash Flow<i class="fa-solid fa-indian-rupee-sign" style="color: #79d2b8;"></i></div>
+        <div class="kpi-value">₹{{ "{:,.0f}".format(netcash_val) }}</div>
+        <div class="kpi-sub up">+32.1% vs last month</div>
+      </div>
+    </section>
+
+    <!-- Add New Transaction -->
+    <section class="panel">
+      <div class="panel-title"><span class="plus"><i class="fa-solid fa-plus" style="color: #3d7dae;"></i></span> Add New Transaction</div>
+      <form class="grid-form" method="POST" action="{{ url_for('add_transaction') }}">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" name="date" required />
+        </div>
+        <div class="field">
+          <label>Type</label>
+          <select name="type" required>
+            <option value="Income">Income</option>
+            <option value="Expense" selected>Expense</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Payment Mode</label>
+          <select name="mode" required>
+            <option>Cash</option>
+            <option>Credit Card</option>
+            <option>Debit Card</option>
+            <option>Saving Bank account 1</option>
+            <option>Saving Bank account 2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <select name="category" required>
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Utilities</option>
+            <option>Entertainment</option>
+            <option>Shopping</option>
+            <option>Healthcare</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Amount (₹)</label>
+          <input type="number" step="0.01" min="0" name="amount" placeholder="0.00" required />
+        </div>
+        <div class="field full">
+          <button type="submit" class="primary-btn">Add Transaction</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- NEW: Cash Flow Trend + Top 5 Recent (right) -->
+    <section class="flow-grid">
+      <!-- Left: Cash Flow Trend -->
+      <div class="panel-sm">
+        <div class="panel-title-sm">Cash Flow Trend</div>
+        <div class="flow-chart"><canvas id="cashFlowChart"></canvas></div>
+        <div class="legend-inline">
+          <span><span class="legend-dot" style="background:#10b981"></span> Cash Inflow</span>
+          <span><span class="legend-dot" style="background:#2563eb"></span> Cash Outflow</span>
+        </div>
+      </div>
+
+      <!-- Right: Top 5 Recent Transactions -->
+      <div class="panel-sm">
+        <div class="panel-title-sm" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Top 5 Recent Transactions</span>
+          <span class="chip">Live</span>
+        </div>
+        <ul class="txn-list">
+          {% for txn in recent_transactions[:5] %}
+          <li class="txn-item">
+            <div class="txn-left">
+              <div class="dot {{ 'income' if txn['Income/Expense']=='Income' else 'expense' }}">
+                {{ '+' if txn['Income/Expense']=='Income' else '−' }}
+              </div>
+              <div>
+                <div class="txn-title">{{ txn['Category'] or '—' }}</div>
+                <div class="txn-sub">{{ txn['Date'] }} <span class="chip">{{ txn['Income/Expense'] }}</span></div>
+              </div>
+            </div>
+            <div class="amt {{ 'income' if txn['Income/Expense']=='Income' else 'expense' }}">
+              {{ '+' if txn['Income/Expense']=='Income' else '' }}₹{{ txn['Amount'] }}
+            </div>
+          </li>
+          {% endfor %}
+          {% if not recent_transactions %}
+          <li class="txn-item"><div class="txn-left"><div class="dot">—</div><div>No transactions yet.</div></div></li>
+          {% endif %}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Analytics (Category/Mode/etc) -->
+    <section class="analytics">
+      <div class="analytics-bar">
+        <h2>Analytics</h2>
+        <div class="select-wrap">
+          <select id="chartSelect">
+            <option value="category" selected>Category Expenses</option>
+            <option value="mode">Payment Mode Expenses</option>
+            <option value="net">Monthly Net Cash Flow</option>
+            <option value="mode_income">Payment Mode Inflow (Income)</option>
+            <option value="category_income">Category-wise Income</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title" id="chartTitle">Category Expenses</div>
+        <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const select = document.getElementById('chartSelect');
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const cashCtx = document.getElementById('cashFlowChart').getContext('2d');
+    const chartTitleEl = document.getElementById('chartTitle');
+    let chart, cashChart;
+
+    const fmtIN = new Intl.NumberFormat('en-IN');
+    const rupee = v => '₹' + fmtIN.format(v);
+
+    // ---------- Cash Flow Trend ----------
+    async function loadCashFlow(){
+      try{
+        const res = await fetch('/api/cashflow'); // expects {labels, inflow, outflow}
+        const cf = await res.json();
+        const labels = cf.labels?.length ? cf.labels : ['Jan','Feb','Mar','Apr','May','Jun'];
+        const inflow = cf.inflow?.length ? cf.inflow : [45000,52000,49000,61000,55000,67000];
+        const outflow = cf.outflow?.length ? cf.outflow : [32000,35000,38000,41000,39000,44000];
+
+        if (cashChart) cashChart.destroy();
+        cashChart = new Chart(cashCtx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Cash Inflow', data: inflow, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.15)', tension: 0.25, pointRadius: 4, pointBackgroundColor:'#10b981', fill:false },
+              { label: 'Cash Outflow', data: outflow, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.12)', tension: 0.25, pointRadius: 4, pointBackgroundColor:'#2563eb', fill:false }
+            ]
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(c)=> rupee(c.parsed.y) } } },
+            scales:{
+              y:{ beginAtZero:true, ticks:{ callback:(v)=> (v>=1000? '₹'+Math.round(v/1000)+'k':'₹'+v) }, grid:{ color:'#eef1f6' } },
+              x:{ grid:{ display:false } }
+            }
+          }
+        });
+      }catch(e){ console.warn('cashflow error', e); }
+    }
+
+    // ---------- Analytics (dropdown) ----------
+    function chartTypeFor(key){
+      switch(key){
+        case 'net': return 'line';
+        case 'mode': return 'pie';
+        case 'mode_income': return 'pie';
+        case 'category_income': return 'doughnut';
+        default: return 'bar';
+      }
+    }
+    function colorPalette(key){
+      const bright = ['#2563EB','#16A34A','#F97316','#7C3AED','#DC2626','#EAB308','#0EA5E9','#14B8A6','#F43F5E','#9333EA'];
+      switch(key){
+        case 'category':        return ['#2563EB','#60A5FA','#93C5FD','#1D4ED8','#3B82F6'];
+        case 'mode':            return bright;
+        case 'net':             return ['#F97316'];
+        case 'mode_income':     return bright;
+        case 'category_income': return bright;
+        default:                return ['#1E66F5'];
+      }
+    }
+    function niceStep(maxVal){
+      if (maxVal <= 1000) return 200;
+      if (maxVal <= 3000) return 500;
+      if (maxVal <= 10000) return 1000;
+      if (maxVal <= 20000) return 2000;
+      if (maxVal <= 50000) return 5000;
+      return 10000;
+    }
+    function roundUp(n, step){ return Math.ceil(n / step) * step; }
+    function buildYScale(values){
+      const maxVal = Math.max(0, ...(values && values.length ? values : [0]));
+      const step = niceStep(maxVal);
+      const yMax = Math.max(step, roundUp(maxVal * 1.12, step));
+      return { yMax, step };
+    }
+
+    async function loadChart(by='category'){
+      const res = await fetch(`/api/analytics?by=${by}`);
+      const payload = await res.json();
+
+      const labels = payload.labels?.length ? payload.labels : ['No data'];
+      const data   = payload.data?.length ? payload.data   : [0];
+
+      const type = chartTypeFor(by);
+      const colors = colorPalette(by);
+      chartTitleEl.textContent = payload.title || 'Analytics';
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom' },
+          tooltip: { callbacks: { label: (ctx) => rupee(ctx.parsed?.y ?? ctx.parsed) } }
+        }
+      };
+
+      let options = commonOptions;
+      if (type !== 'pie' && type !== 'doughnut'){
+        const { yMax, step } = buildYScale(data);
+        options = {
+          ...commonOptions,
+          layout: { padding: { top: 4, bottom: 0 } },
+          scales: {
+            y: { beginAtZero: true, max: yMax, grace: 0,
+                 ticks: { stepSize: step, callback: (v)=> (v>=1000? '₹'+Math.round(v/1000)+'k':'₹'+v) },
+                 grid: { color: '#eef1f6' } },
+            x: { grid: { display: false } }
+          }
+        };
+      }
+
+      const cfg = {
+        type,
+        data: {
+          labels,
+          datasets: [{
+            label: payload.title,
+            data,
+            backgroundColor: (type === 'line') ? undefined : colors,
+            borderColor: (type === 'line') ? '#f97316' : colors,
+            borderWidth: (type === 'line') ? 2 : 0,
+            tension: (type === 'line') ? 0.25 : 0,
+            fill: false
+          }]
+        },
+        options
+      };
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, cfg);
+    }
+
+    // Init both sections
+    loadCashFlow();
+    loadChart('category');
+    select.addEventListener('change', (e)=> loadChart(e.target.value));
+  </script>
+</body>
+</html>
